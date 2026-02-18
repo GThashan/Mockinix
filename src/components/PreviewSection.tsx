@@ -4,7 +4,7 @@ export const PreviewSection = () => {
     const [view, setView] = useState('front');
 
     return (
-        <div className="relative flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-8 overflow-hidden transition-colors duration-300">
+        <div className="relative flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center overflow-hidden transition-colors duration-300">
             <div className="absolute top-8 left-8">
                 <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-100 dark:border-gray-800 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
