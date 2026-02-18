@@ -12,6 +12,10 @@ function App() {
     return false;
   });
 
+  const [bgType, setBgType] = useState<'color' | 'image'>('color');
+  const [bgColor, setBgColor] = useState('#e6a282');
+  const [bgImage, setBgImage] = useState<string | null>(null);
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -26,11 +30,19 @@ function App() {
     <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 selection:bg-blue-100 dark:selection:bg-blue-900">
       <Header isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />
       <main className="flex flex-1 overflow-hidden">
-        <PreviewSection />
-        <EditorSidebar />
+        <PreviewSection bgType={bgType} bgColor={bgColor} bgImage={bgImage} />
+        <EditorSidebar
+          bgType={bgType}
+          setBgType={setBgType}
+          bgColor={bgColor}
+          setBgColor={setBgColor}
+          bgImage={bgImage}
+          setBgImage={setBgImage}
+        />
       </main>
     </div>
   );
 }
+
 
 export default App;

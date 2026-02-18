@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export const PreviewSection = () => {
+export const PreviewSection = ({ bgType, bgColor, bgImage }: { bgType: 'color' | 'image', bgColor: string, bgImage: string | null }) => {
     const [view, setView] = useState('front');
 
     return (
@@ -14,13 +14,20 @@ export const PreviewSection = () => {
 
             {/* Main Mockup Display */}
             <div className="w-[98%] h-[98%]  relative  overflow-hidden shadow-2xl transition-all duration-700">
-                <div className="w-full absolute inset-0 bg-[#e6a282] flex items-center justify-center">
+                <div
+                    className="w-full absolute inset-0 flex items-center justify-center bg-cover bg-center"
+                    style={{
+                        backgroundColor: bgType === 'color' ? bgColor : undefined,
+                        backgroundImage: bgType === 'image' && bgImage ? `url(${bgImage})` : undefined
+                    }}
+                >
                     {/* T-shirt image placeholder */}
                     <div className="text-white/20 font-bold text-6xl rotate-12 select-none">T-SHIRT MOCKUP</div>
                     {/* Overlay for lighting effect */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent dark:from-black/40" />
                 </div>
             </div>
+
 
             {/* View Toggles and Control Bar */}
             <div className="absolute bottom-12 flex flex-col items-center gap-4 w-full px-8">
