@@ -1,31 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import { ColorPickerPopup } from './ColorPickerPopup';
 
-// Color conversion helpers
-const hsvToRgb = (h: number, s: number, v: number) => {
-    let r = 0, g = 0, b = 0;
-    const i = Math.floor(h * 360 / 60);
-    const f = (h * 360 / 60) - i;
-    const p = v * (1 - s);
-    const q = v * (1 - f * s);
-    const t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-        case 0: r = v; g = t; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
-    }
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
-};
-
-const rgbToHex = (r: number, g: number, b: number) => {
-    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
-};
+const DEFAULT_SAVED_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'];
 
 export const EditorSidebar = ({
     bgType, setBgType, bgColor, setBgColor, shirtColor, setShirtColor, bgImage, setBgImage, bgImages, setBgImages
@@ -41,53 +17,11 @@ export const EditorSidebar = ({
     bgImages: string[],
     setBgImages: (imgs: string[]) => void
 }) => {
-    const [showColorPicker, setShowColorPicker] = useState(false);
-    const [hsv, setHsv] = useState({ h: 0.5, s: 0.5, v: 0.9 });
-    const [alpha, setAlpha] = useState(1);
-    const [savedColors, setSavedColors] = useState(['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899']);
+    const [showBgColorPicker, setShowBgColorPicker] = useState(false);
+    const [showShirtColorPicker, setShowShirtColorPicker] = useState(false);
+    const [savedColors, setSavedColors] = useState(DEFAULT_SAVED_COLORS);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const satRectRef = useRef<HTMLDivElement>(null);
-
-    // Update bgColor when HSV or Alpha changes
-    useEffect(() => {
-        const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
-        const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-        setBgColor(hex);
-    }, [hsv, setBgColor]);
-
-    const handleSatMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-        const move = (event: MouseEvent | TouchEvent) => {
-            if (!satRectRef.current) return;
-            const rect = satRectRef.current.getBoundingClientRect();
-            const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
-            const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
-
-            let s = (clientX - rect.left) / rect.width;
-            let v = 1 - (clientY - rect.top) / rect.height;
-
-            s = Math.max(0, Math.min(1, s));
-            v = Math.max(0, Math.min(1, v));
-
-            setHsv(prev => ({ ...prev, s, v }));
-            setBgType('color');
-        };
-
-        const stop = () => {
-            window.removeEventListener('mousemove', move);
-            window.removeEventListener('mouseup', stop);
-            window.removeEventListener('touchmove', move);
-            window.removeEventListener('touchend', stop);
-        };
-
-        window.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', stop);
-        window.addEventListener('touchmove', move);
-        window.addEventListener('touchend', stop);
-
-        // Initial call
-        move(e.nativeEvent as any);
-    };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -103,8 +37,11 @@ export const EditorSidebar = ({
         }
     };
 
-    const curHueRgb = hsvToRgb(hsv.h, 1, 1);
-    const curHueHex = rgbToHex(curHueRgb.r, curHueRgb.g, curHueRgb.b);
+    const handleSaveColor = (hex: string) => {
+        if (!savedColors.includes(hex)) {
+            setSavedColors(prev => [...prev, hex]);
+        }
+    };
 
     return (
         <aside className="w-[400px] border-l border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col h-[calc(100vh-64px)] transition-colors duration-300">
@@ -125,7 +62,7 @@ export const EditorSidebar = ({
                     <div className="bg-gray-50/50 dark:bg-gray-800/50 rounded-3xl p-6 space-y-6 transition-colors duration-300">
                         <div>
                             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-3">Garment Color</label>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-3 relative">
                                 {[
                                     { name: 'White', class: 'bg-white', value: '#ffffff' },
                                     { name: 'Black', class: 'bg-gray-900', value: '#111827' },
@@ -141,7 +78,29 @@ export const EditorSidebar = ({
                                         title={color.name}
                                     />
                                 ))}
-                                <button className="w-8 h-8 rounded-full border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-lg hover:border-gray-500 transition-colors">+</button>
+
+                                {/* Custom color picker trigger */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowShirtColorPicker(v => !v)}
+                                        title="Custom color"
+                                        className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-lg hover:border-blue-400 hover:text-blue-500 transition-all"
+                                        style={shirtColor && !['#ffffff', '#111827', '#2563eb', '#f43f5e', '#059669', '#f59e0b'].includes(shirtColor) ? { backgroundColor: shirtColor, border: '2px solid transparent' } : undefined}
+                                    >
+                                        {shirtColor && !['#ffffff', '#111827', '#2563eb', '#f43f5e', '#059669', '#f59e0b'].includes(shirtColor) ? null : '+'}
+                                    </button>
+
+                                    {showShirtColorPicker && (
+                                        <ColorPickerPopup
+                                            color={shirtColor}
+                                            title="Garment Color"
+                                            onChange={(hex) => { setShirtColor(hex); }}
+                                            onClose={() => setShowShirtColorPicker(false)}
+                                            savedColors={savedColors}
+                                            onSaveColor={handleSaveColor}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -166,123 +125,23 @@ export const EditorSidebar = ({
                             {/* Color Selector Swatch */}
                             <div className="space-y-2 relative">
                                 <div
-                                    onClick={() => {
-                                        setShowColorPicker(!showColorPicker);
-                                    }}
+                                    onClick={() => { setShowBgColorPicker(!showBgColorPicker); setBgType('color'); }}
                                     className={`aspect-square rounded-2xl border-2 transition-all cursor-pointer p-1 overflow-hidden flex items-center justify-center ${bgType === 'color' ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                 >
                                     <div className="w-full h-full rounded-xl shadow-inner border border-black/5" style={{ backgroundColor: bgColor }} />
                                 </div>
                                 <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center block">Color</span>
 
-                                {/* Color Picker Popup */}
-                                {showColorPicker && (
-                                    <div className="absolute top-0 left-0 z-[100] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 p-6 w-[320px] transition-all duration-200">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">Color Picker</h4>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setShowColorPicker(false);
-                                                }}
-                                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                            >
-                                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                    <path d="M18 6L6 18M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-
-                                        <div
-                                            ref={satRectRef}
-                                            onMouseDown={handleSatMouseDown}
-                                            onTouchStart={handleSatMouseDown}
-                                            className="w-full aspect-video rounded-xl mb-4 relative cursor-crosshair overflow-hidden border border-black/5"
-                                            style={{ backgroundColor: curHueHex }}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                                            <div
-                                                className="absolute w-4 h-4 border-2 border-white rounded-full shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                                                style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%` }}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="relative h-2 rounded-full hue-spectrum cursor-pointer group">
-                                                <input
-                                                    type="range"
-                                                    min="0" max="1" step="0.001"
-                                                    value={hsv.h}
-                                                    onChange={(e) => setHsv(prev => ({ ...prev, h: parseFloat(e.target.value) }))}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div
-                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
-                                                    style={{ left: `calc(${hsv.h * 100}% - 8px)` }}
-                                                />
-                                            </div>
-
-                                            <div className="relative h-2 rounded-full checkered-bg cursor-pointer overflow-hidden group">
-                                                <div
-                                                    className="absolute inset-0"
-                                                    style={{ background: `linear-gradient(to right, transparent, ${bgColor})` }}
-                                                />
-                                                <input
-                                                    type="range"
-                                                    min="0" max="1" step="0.01"
-                                                    value={alpha}
-                                                    onChange={(e) => setAlpha(parseFloat(e.target.value))}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div
-                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
-                                                    style={{ left: `calc(${alpha * 100}% - 8px)` }}
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
-                                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Hex</span>
-                                                    <input
-                                                        type="text"
-                                                        value={bgColor}
-                                                        onChange={(e) => setBgColor(e.target.value)}
-                                                        className="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-900 dark:text-white w-full uppercase p-0"
-                                                    />
-                                                </div>
-                                                <div className="w-16 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
-                                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Alpha</span>
-                                                    <span className="text-xs font-bold text-gray-900 dark:text-white">{Math.round(alpha * 100)}%</span>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Saved Colors</span>
-                                                    <button
-                                                        onClick={() => !savedColors.includes(bgColor) && setSavedColors([...savedColors, bgColor])}
-                                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700"
-                                                    >
-                                                        + Add
-                                                    </button>
-                                                </div>
-                                                <div className="grid grid-cols-7 gap-2">
-                                                    {savedColors.map((color, i) => (
-                                                        <button
-                                                            key={i}
-                                                            onClick={() => {
-                                                                setBgColor(color);
-                                                                setBgType('color');
-                                                            }}
-                                                            className={`aspect-square rounded-full border border-black/5 shadow-sm hover:scale-110 transition-transform ${bgColor === color ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}`}
-                                                            style={{ backgroundColor: color }}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {/* Background Color Picker Popup */}
+                                {showBgColorPicker && (
+                                    <ColorPickerPopup
+                                        color={bgColor}
+                                        title="Background Color"
+                                        onChange={(hex) => { setBgColor(hex); setBgType('color'); }}
+                                        onClose={() => setShowBgColorPicker(false)}
+                                        savedColors={savedColors}
+                                        onSaveColor={handleSaveColor}
+                                    />
                                 )}
                             </div>
 
@@ -290,10 +149,7 @@ export const EditorSidebar = ({
                             {bgImages.map((img, idx) => (
                                 <div key={idx} className="space-y-2">
                                     <div
-                                        onClick={() => {
-                                            setBgImage(img);
-                                            setBgType('image');
-                                        }}
+                                        onClick={() => { setBgImage(img); setBgType('image'); }}
                                         className={`aspect-square rounded-2xl border-2 transition-all cursor-pointer p-1 overflow-hidden flex items-center justify-center ${bgType === 'image' && bgImage === img ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                                     >
                                         <div className="w-full h-full rounded-xl bg-cover bg-center shadow-inner" style={{ backgroundImage: `url(${img})` }} />

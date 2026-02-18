@@ -16,7 +16,7 @@ export function TShirtModel({ color }: { color: string }) {
     });
 
     return (
-        <group dispose={null} scale={[7, 7, 7]} position={[0, 0.5, 0]}>
+        <group dispose={null} scale={[4.5, 4.5, 4.5]} position={[0, 0.4, 0]}>
             <mesh
                 ref={meshRef}
                 castShadow
