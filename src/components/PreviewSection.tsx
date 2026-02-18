@@ -52,7 +52,7 @@ export const PreviewSection = ({ bgType, bgColor, bgImage, shirtColor }: { bgTyp
                         backgroundPosition: 'center'
                     }}
                 >
-                    <Canvas shadows camera={{ position: [0, 0, 10], fmin: 35 }}>
+                    <Canvas shadows camera={{ position: [0, 0, 5], fov: 40 }}>
                         <ambientLight intensity={0.5} />
                         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
                         <pointLight position={[-10, -10, -10]} />
@@ -60,7 +60,7 @@ export const PreviewSection = ({ bgType, bgColor, bgImage, shirtColor }: { bgTyp
                         <Suspense fallback={null}>
                             <TShirtModel color={shirtColor} />
                             <Environment preset="city" />
-                            <ContactShadows position={[0, -2, 0]} opacity={0.5} scale={10} blur={1.5} far={0.8} />
+                            <ContactShadows position={[0, -3.5, 0]} opacity={0.5} scale={10} blur={1.5} far={0.8} />
                         </Suspense>
 
                         <CameraManager view={view} />
@@ -71,7 +71,7 @@ export const PreviewSection = ({ bgType, bgColor, bgImage, shirtColor }: { bgTyp
 
 
             {/* View Toggles and Control Bar */}
-            <div className="absolute bottom-12 flex flex-col items-center gap-4 w-full px-8">
+            <div className="absolute bottom-8 flex flex-col items-center gap-4 w-full px-8">
                 <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-1.5 flex gap-1 transition-colors duration-300">
                     <button
                         onClick={() => setView('front')}
