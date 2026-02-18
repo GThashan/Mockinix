@@ -28,12 +28,14 @@ const rgbToHex = (r: number, g: number, b: number) => {
 };
 
 export const EditorSidebar = ({
-    bgType, setBgType, bgColor, setBgColor, bgImage, setBgImage, bgImages, setBgImages
+    bgType, setBgType, bgColor, setBgColor, shirtColor, setShirtColor, bgImage, setBgImage, bgImages, setBgImages
 }: {
     bgType: 'color' | 'image',
     setBgType: (t: 'color' | 'image') => void,
     bgColor: string,
     setBgColor: (c: string) => void,
+    shirtColor: string,
+    setShirtColor: (c: string) => void,
     bgImage: string | null,
     setBgImage: (i: string | null) => void,
     bgImages: string[],
@@ -124,8 +126,20 @@ export const EditorSidebar = ({
                         <div>
                             <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-3">Garment Color</label>
                             <div className="flex flex-wrap gap-3">
-                                {['bg-white border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/40', 'bg-gray-900', 'bg-blue-600', 'bg-rose-500', 'bg-emerald-600', 'bg-amber-500'].map((color, i) => (
-                                    <button key={i} className={`w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm transition-transform hover:scale-110 ${color}`} />
+                                {[
+                                    { name: 'White', class: 'bg-white', value: '#ffffff' },
+                                    { name: 'Black', class: 'bg-gray-900', value: '#111827' },
+                                    { name: 'Blue', class: 'bg-blue-600', value: '#2563eb' },
+                                    { name: 'Red', class: 'bg-rose-500', value: '#f43f5e' },
+                                    { name: 'Green', class: 'bg-emerald-600', value: '#059669' },
+                                    { name: 'Amber', class: 'bg-amber-500', value: '#f59e0b' }
+                                ].map((color, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setShirtColor(color.value)}
+                                        className={`w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm transition-transform hover:scale-110 ${color.class} ${shirtColor === color.value ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 scale-110' : ''}`}
+                                        title={color.name}
+                                    />
                                 ))}
                                 <button className="w-8 h-8 rounded-full border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-lg hover:border-gray-500 transition-colors">+</button>
                             </div>

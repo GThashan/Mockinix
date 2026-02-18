@@ -14,8 +14,10 @@ function App() {
 
   const [bgType, setBgType] = useState<'color' | 'image'>('color');
   const [bgColor, setBgColor] = useState('#e6a282');
+  const [shirtColor, setShirtColor] = useState('#ffffff');
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [bgImages, setBgImages] = useState<string[]>([]);
+
 
   useEffect(() => {
     if (isDark) {
@@ -31,18 +33,21 @@ function App() {
     <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col font-sans transition-colors duration-300 selection:bg-blue-100 dark:selection:bg-blue-900">
       <Header isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />
       <main className="flex flex-1 overflow-hidden">
-        <PreviewSection bgType={bgType} bgColor={bgColor} bgImage={bgImage} />
+        <PreviewSection bgType={bgType} bgColor={bgColor} bgImage={bgImage} shirtColor={shirtColor} />
         <EditorSidebar
           bgType={bgType}
           setBgType={setBgType}
           bgColor={bgColor}
           setBgColor={setBgColor}
+          shirtColor={shirtColor}
+          setShirtColor={setShirtColor}
           bgImage={bgImage}
           setBgImage={setBgImage}
           bgImages={bgImages}
           setBgImages={setBgImages}
         />
       </main>
+
     </div>
   );
 }

@@ -1,11 +1,40 @@
-import { useState } from 'react';
+import { useState, Suspense, useRef, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, ContactShadows, Environment } from '@react-three/drei';
+import { TShirtModel } from './TShirtModel';
 
-export const PreviewSection = ({ bgType, bgColor, bgImage }: { bgType: 'color' | 'image', bgColor: string, bgImage: string | null }) => {
+function CameraManager({ view }: { view: string }) {
+    const orbitRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (!orbitRef.current) return;
+
+        if (view === 'front') {
+            orbitRef.current.setAzimuthalAngle(0);
+            orbitRef.current.update();
+        } else if (view === 'back') {
+            orbitRef.current.setAzimuthalAngle(Math.PI);
+            orbitRef.current.update();
+        }
+    }, [view]);
+
+    return (
+        <OrbitControls
+            ref={orbitRef}
+            enablePan={false}
+            enableZoom={true}
+            minPolarAngle={Math.PI / 2.5}
+            maxPolarAngle={Math.PI / 2}
+        />
+    );
+}
+
+export const PreviewSection = ({ bgType, bgColor, bgImage, shirtColor }: { bgType: 'color' | 'image', bgColor: string, bgImage: string | null, shirtColor: string }) => {
     const [view, setView] = useState('front');
 
     return (
         <div className="relative flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center overflow-hidden transition-colors duration-300">
-            <div className="absolute top-8 left-8">
+            <div className="absolute top-8 left-8 z-10">
                 <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-100 dark:border-gray-800 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Live 3D Preview</span>
@@ -13,20 +42,32 @@ export const PreviewSection = ({ bgType, bgColor, bgImage }: { bgType: 'color' |
             </div>
 
             {/* Main Mockup Display */}
-            <div className="w-[98%] h-[98%]  relative  overflow-hidden shadow-2xl transition-all duration-700">
+            <div className="w-full h-full relative overflow-hidden transition-all duration-700">
                 <div
-                    className="w-full absolute inset-0 flex items-center justify-center bg-cover bg-center"
+                    className="w-full h-full absolute inset-0 flex items-center justify-center"
                     style={{
                         backgroundColor: bgType === 'color' ? bgColor : undefined,
-                        backgroundImage: bgType === 'image' && bgImage ? `url(${bgImage})` : undefined
+                        backgroundImage: bgType === 'image' && bgImage ? `url(${bgImage})` : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
                     }}
                 >
-                    {/* T-shirt image placeholder */}
-                    <div className="text-white/20 font-bold text-6xl rotate-12 select-none">T-SHIRT MOCKUP</div>
-                    {/* Overlay for lighting effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent dark:from-black/40" />
+                    <Canvas shadows camera={{ position: [0, 0, 10], fmin: 35 }}>
+                        <ambientLight intensity={0.5} />
+                        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+                        <pointLight position={[-10, -10, -10]} />
+
+                        <Suspense fallback={null}>
+                            <TShirtModel color={shirtColor} />
+                            <Environment preset="city" />
+                            <ContactShadows position={[0, -2, 0]} opacity={0.5} scale={10} blur={1.5} far={0.8} />
+                        </Suspense>
+
+                        <CameraManager view={view} />
+                    </Canvas>
                 </div>
             </div>
+
 
 
             {/* View Toggles and Control Bar */}
