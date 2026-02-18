@@ -13,8 +13,8 @@ export const PreviewSection = () => {
             </div>
 
             {/* Main Mockup Display */}
-            <div className="w-full max-w-2xl aspect-square relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-700">
-                <div className="absolute inset-0 bg-[#e6a282] flex items-center justify-center">
+            <div className="w-[98%] h-[98%]  relative  overflow-hidden shadow-2xl transition-all duration-700">
+                <div className="w-full absolute inset-0 bg-[#e6a282] flex items-center justify-center">
                     {/* T-shirt image placeholder */}
                     <div className="text-white/20 font-bold text-6xl rotate-12 select-none">T-SHIRT MOCKUP</div>
                     {/* Overlay for lighting effect */}
