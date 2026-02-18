@@ -28,14 +28,16 @@ const rgbToHex = (r: number, g: number, b: number) => {
 };
 
 export const EditorSidebar = ({
-    bgType, setBgType, bgColor, setBgColor, bgImage, setBgImage
+    bgType, setBgType, bgColor, setBgColor, bgImage, setBgImage, bgImages, setBgImages
 }: {
     bgType: 'color' | 'image',
     setBgType: (t: 'color' | 'image') => void,
     bgColor: string,
     setBgColor: (c: string) => void,
     bgImage: string | null,
-    setBgImage: (i: string | null) => void
+    setBgImage: (i: string | null) => void,
+    bgImages: string[],
+    setBgImages: (imgs: string[]) => void
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [hsv, setHsv] = useState({ h: 0.5, s: 0.5, v: 0.9 });
@@ -90,7 +92,9 @@ export const EditorSidebar = ({
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                setBgImage(event.target?.result as string);
+                const newImg = event.target?.result as string;
+                setBgImages([...bgImages, newImg]);
+                setBgImage(newImg);
                 setBgType('image');
             };
             reader.readAsDataURL(file);
@@ -143,164 +147,166 @@ export const EditorSidebar = ({
                 {/* Background */}
                 <section>
                     <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Background</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Background Color */}
-                        <div className="space-y-2 relative group-container">
-                            <div
-                                onClick={() => {
-                                    console.log('Color picker toggled:', !showColorPicker);
-                                    setShowColorPicker(!showColorPicker);
-                                }}
-                                className={`group aspect-square rounded-2xl border-2 transition-all cursor-pointer p-2 overflow-hidden flex items-center justify-center ${bgType === 'color' ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'}`}
-                            >
-                                <div className="w-full h-full rounded-xl shadow-inner border border-black/5" style={{ backgroundColor: bgColor }} />
-                                <div className="absolute inset-x-0 bottom-0 bg-black/20 backdrop-blur-sm p-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-[8px] text-white font-bold uppercase">Change</span>
+                    <div className="bg-gray-50/50 dark:bg-gray-800/50 rounded-3xl p-6 transition-colors duration-300">
+                        <div className="grid grid-cols-4 gap-4">
+                            {/* Color Selector Swatch */}
+                            <div className="space-y-2 relative">
+                                <div
+                                    onClick={() => {
+                                        setShowColorPicker(!showColorPicker);
+                                    }}
+                                    className={`aspect-square rounded-2xl border-2 transition-all cursor-pointer p-1 overflow-hidden flex items-center justify-center ${bgType === 'color' ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                >
+                                    <div className="w-full h-full rounded-xl shadow-inner border border-black/5" style={{ backgroundColor: bgColor }} />
                                 </div>
-                            </div>
-                            <span className="text-[11px] font-bold text-gray-900 dark:text-gray-200 px-1">Background Color</span>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center block">Color</span>
 
-                            {/* Advanced Color Picker Popup */}
-                            {showColorPicker && (
-                                <div className="absolute top-0 left-0 z-[100] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 p-6 w-[320px] transition-all duration-200">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white">Color Picker</h4>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowColorPicker(false);
-                                            }}
-                                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                        >
-                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                <path d="M18 6L6 18M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                {/* Color Picker Popup */}
+                                {showColorPicker && (
+                                    <div className="absolute top-0 left-0 z-[100] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 p-6 w-[320px] transition-all duration-200">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">Color Picker</h4>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowColorPicker(false);
+                                                }}
+                                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                            >
+                                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                    <path d="M18 6L6 18M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
 
-                                    {/* Saturation/Brightness Area */}
-                                    <div
-                                        ref={satRectRef}
-                                        onMouseDown={handleSatMouseDown}
-                                        onTouchStart={handleSatMouseDown}
-                                        className="w-full aspect-video rounded-xl mb-4 relative cursor-crosshair overflow-hidden border border-black/5"
-                                        style={{ backgroundColor: curHueHex }}
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-
-                                        {/* Cursor */}
                                         <div
-                                            className="absolute w-4 h-4 border-2 border-white rounded-full shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                                            style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%` }}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {/* Hue Slider */}
-                                        <div className="relative h-2 rounded-full hue-spectrum cursor-pointer group">
-                                            <input
-                                                type="range"
-                                                min="0" max="1" step="0.001"
-                                                value={hsv.h}
-                                                onChange={(e) => setHsv(prev => ({ ...prev, h: parseFloat(e.target.value) }))}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                            />
+                                            ref={satRectRef}
+                                            onMouseDown={handleSatMouseDown}
+                                            onTouchStart={handleSatMouseDown}
+                                            className="w-full aspect-video rounded-xl mb-4 relative cursor-crosshair overflow-hidden border border-black/5"
+                                            style={{ backgroundColor: curHueHex }}
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                                             <div
-                                                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
-                                                style={{ left: `calc(${hsv.h * 100}% - 8px)` }}
+                                                className="absolute w-4 h-4 border-2 border-white rounded-full shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                                style={{ left: `${hsv.s * 100}%`, top: `${(1 - hsv.v) * 100}%` }}
                                             />
                                         </div>
 
-                                        {/* Opacity Slider */}
-                                        <div className="relative h-2 rounded-full checkered-bg cursor-pointer overflow-hidden group">
-                                            <div
-                                                className="absolute inset-0"
-                                                style={{ background: `linear-gradient(to right, transparent, ${bgColor})` }}
-                                            />
-                                            <input
-                                                type="range"
-                                                min="0" max="1" step="0.01"
-                                                value={alpha}
-                                                onChange={(e) => setAlpha(parseFloat(e.target.value))}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                            />
-                                            <div
-                                                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
-                                                style={{ left: `calc(${alpha * 100}% - 8px)` }}
-                                            />
-                                        </div>
-
-                                        {/* Input Controls */}
-                                        <div className="flex gap-2">
-                                            <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
-                                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Hex</span>
+                                        <div className="space-y-4">
+                                            <div className="relative h-2 rounded-full hue-spectrum cursor-pointer group">
                                                 <input
-                                                    type="text"
-                                                    value={bgColor}
-                                                    onChange={(e) => setBgColor(e.target.value)}
-                                                    className="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-900 dark:text-white w-full uppercase p-0"
+                                                    type="range"
+                                                    min="0" max="1" step="0.001"
+                                                    value={hsv.h}
+                                                    onChange={(e) => setHsv(prev => ({ ...prev, h: parseFloat(e.target.value) }))}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div
+                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
+                                                    style={{ left: `calc(${hsv.h * 100}% - 8px)` }}
                                                 />
                                             </div>
-                                            <div className="w-16 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
-                                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Alpha</span>
-                                                <span className="text-xs font-bold text-gray-900 dark:text-white">{Math.round(alpha * 100)}%</span>
-                                            </div>
-                                        </div>
 
-                                        {/* Saved Colors */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Saved Colors</span>
-                                                <button
-                                                    onClick={() => !savedColors.includes(bgColor) && setSavedColors([...savedColors, bgColor])}
-                                                    className="text-[10px] font-bold text-blue-600 hover:text-blue-700"
-                                                >
-                                                    + Add
-                                                </button>
+                                            <div className="relative h-2 rounded-full checkered-bg cursor-pointer overflow-hidden group">
+                                                <div
+                                                    className="absolute inset-0"
+                                                    style={{ background: `linear-gradient(to right, transparent, ${bgColor})` }}
+                                                />
+                                                <input
+                                                    type="range"
+                                                    min="0" max="1" step="0.01"
+                                                    value={alpha}
+                                                    onChange={(e) => setAlpha(parseFloat(e.target.value))}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div
+                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-white shadow-md rounded-full pointer-events-none transition-transform group-hover:scale-110"
+                                                    style={{ left: `calc(${alpha * 100}% - 8px)` }}
+                                                />
                                             </div>
-                                            <div className="grid grid-cols-7 gap-2">
-                                                {savedColors.map((color, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => {
-                                                            setBgColor(color);
-                                                            setBgType('color');
-                                                        }}
-                                                        className={`aspect-square rounded-full border border-black/5 shadow-sm hover:scale-110 transition-transform ${bgColor === color ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}`}
-                                                        style={{ backgroundColor: color }}
+
+                                            <div className="flex gap-2">
+                                                <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
+                                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Hex</span>
+                                                    <input
+                                                        type="text"
+                                                        value={bgColor}
+                                                        onChange={(e) => setBgColor(e.target.value)}
+                                                        className="bg-transparent border-none focus:ring-0 text-xs font-bold text-gray-900 dark:text-white w-full uppercase p-0"
                                                     />
-                                                ))}
+                                                </div>
+                                                <div className="w-16 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col">
+                                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Alpha</span>
+                                                    <span className="text-xs font-bold text-gray-900 dark:text-white">{Math.round(alpha * 100)}%</span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Saved Colors</span>
+                                                    <button
+                                                        onClick={() => !savedColors.includes(bgColor) && setSavedColors([...savedColors, bgColor])}
+                                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700"
+                                                    >
+                                                        + Add
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-7 gap-2">
+                                                    {savedColors.map((color, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => {
+                                                                setBgColor(color);
+                                                                setBgType('color');
+                                                            }}
+                                                            className={`aspect-square rounded-full border border-black/5 shadow-sm hover:scale-110 transition-transform ${bgColor === color ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}`}
+                                                            style={{ backgroundColor: color }}
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Background Image */}
-                        <div className="space-y-2">
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleImageUpload}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <div
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`aspect-square rounded-2xl border-2 transition-all cursor-pointer p-2 overflow-hidden flex items-center justify-center ${bgType === 'image' ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'}`}
-                            >
-                                {bgImage ? (
-                                    <div className="w-full h-full rounded-xl bg-cover bg-center shadow-inner" style={{ backgroundImage: `url(${bgImage})` }} />
-                                ) : (
-                                    <div className="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
-                                        <span className="text-[8px] font-bold uppercase tracking-wider">Upload</span>
                                     </div>
                                 )}
                             </div>
-                            <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-1">Background Image</span>
+
+                            {/* Image Swatches */}
+                            {bgImages.map((img, idx) => (
+                                <div key={idx} className="space-y-2">
+                                    <div
+                                        onClick={() => {
+                                            setBgImage(img);
+                                            setBgType('image');
+                                        }}
+                                        className={`aspect-square rounded-2xl border-2 transition-all cursor-pointer p-1 overflow-hidden flex items-center justify-center ${bgType === 'image' && bgImage === img ? 'border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    >
+                                        <div className="w-full h-full rounded-xl bg-cover bg-center shadow-inner" style={{ backgroundImage: `url(${img})` }} />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center block line-clamp-1">Image {idx + 1}</span>
+                                </div>
+                            ))}
+
+                            {/* Add Image Button */}
+                            <div className="space-y-2">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImageUpload}
+                                    accept="image/*"
+                                    className="hidden"
+                                />
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="aspect-square rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 group"
+                                >
+                                    <div className="w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><path d="M12 5v14M5 12h14" /></svg>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center block">Upload</span>
+                            </div>
                         </div>
                     </div>
                 </section>

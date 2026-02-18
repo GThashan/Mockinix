@@ -15,6 +15,7 @@ function App() {
   const [bgType, setBgType] = useState<'color' | 'image'>('color');
   const [bgColor, setBgColor] = useState('#e6a282');
   const [bgImage, setBgImage] = useState<string | null>(null);
+  const [bgImages, setBgImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (isDark) {
@@ -38,6 +39,8 @@ function App() {
           setBgColor={setBgColor}
           bgImage={bgImage}
           setBgImage={setBgImage}
+          bgImages={bgImages}
+          setBgImages={setBgImages}
         />
       </main>
     </div>
